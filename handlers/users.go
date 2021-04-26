@@ -32,7 +32,7 @@ func GetUser(rw http.ResponseWriter, r *http.Request) {
 	}
 	u, _, e := data.GetUser(id)
 	if e != nil {
-		http.Error(rw, "Product not found", http.StatusNotFound)
+		http.Error(rw, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -84,5 +84,15 @@ func CreateUser(rw http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUser(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(rw, "Unable to convert id", http.StatusBadRequest)
+		return
+	}
 
+	err = data.DeleteUser(id)
+	if err != nil {
+		http.Error(rw, "User not found", http.StatusBadRequest)
+	}
 }

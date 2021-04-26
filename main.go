@@ -28,7 +28,7 @@ func main() {
 	postRouter.HandleFunc("/", handlers.CreateUser)
 
 	deleteRouter := router.Methods(http.MethodDelete).Subrouter()
-	deleteRouter.HandleFunc("/{id:[0-9]+}", handlers.GetUsers)
+	deleteRouter.HandleFunc("/{id:[0-9]+}", handlers.DeleteUser)
 
 	server := &http.Server{
 		Addr:         ":8080",

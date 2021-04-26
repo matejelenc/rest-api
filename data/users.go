@@ -30,7 +30,7 @@ func GetUser(id int) (*User, int, error) {
 }
 
 func CreateUser(u *User) {
-	u.ID = len(userList)
+	u.ID = userList[len(userList)-1].ID + 1
 	userList = append(userList, u)
 }
 
@@ -44,6 +44,17 @@ func UpdateUser(id int, u *User) error {
 	}
 	return ErrUserNotFound
 
+}
+
+func DeleteUser(id int) error {
+	for i, p := range userList {
+		if p.ID == id {
+			userList = append(userList[:i], userList[i+1])
+			return nil
+		}
+	}
+
+	return ErrUserNotFound
 }
 
 var userList = Users{
