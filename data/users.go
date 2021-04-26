@@ -34,6 +34,18 @@ func CreateUser(u *User) {
 	userList = append(userList, u)
 }
 
+func UpdateUser(id int, u *User) error {
+	for _, user := range userList {
+		if user.ID == id {
+			u.ID = id
+			userList[id] = u
+			return nil
+		}
+	}
+	return ErrUserNotFound
+
+}
+
 var userList = Users{
 	&User{
 		Name:     "Baži",
