@@ -3,8 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"rest-api/data"
 	"strconv"
+
+	"github.com/matejelenc/rest-api/data"
 
 	"github.com/gorilla/mux"
 )

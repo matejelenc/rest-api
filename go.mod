@@ -1,4 +1,4 @@
-module rest-api
+module github.com/matejelenc/rest-api
 
 go 1.16
 

@@ -1,7 +1,6 @@
 package data
 
 import (
-	_ "encoding/json"
 	"fmt"
 )
 
