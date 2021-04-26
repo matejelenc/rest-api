@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"rest-api/handlers"
 	"time"
+
+	"github.com/matejelenc/rest-api/handlers"
 
 	"github.com/gorilla/mux"
 )
