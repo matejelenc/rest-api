@@ -36,10 +36,10 @@ func CreateUser(u *User) {
 }
 
 func UpdateUser(id int, u *User) error {
-	for _, user := range userList {
+	for i, user := range userList {
 		if user.ID == id {
 			u.ID = id
-			userList[id] = u
+			userList[i] = u
 			return nil
 		}
 	}

@@ -25,12 +25,15 @@ func main() {
 
 	putRouter := router.Methods(http.MethodPut).Subrouter()
 	putRouter.HandleFunc("/{id:[0-9]+}", handlers.UpdateUser)
+	putRouter.HandleFunc("/groups/{id:[0-9]+}", handlers.UpdateGroup)
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/", handlers.CreateUser)
+	postRouter.HandleFunc("/groups", handlers.CreateGroup)
 
 	deleteRouter := router.Methods(http.MethodDelete).Subrouter()
 	deleteRouter.HandleFunc("/{id:[0-9]+}", handlers.DeleteUser)
+	deleteRouter.HandleFunc("/groups/{id:[0-9]+}", handlers.DeleteGroup)
 
 	server := &http.Server{
 		Addr:         ":8080",

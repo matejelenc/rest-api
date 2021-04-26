@@ -44,8 +44,6 @@ func GetUser(rw http.ResponseWriter, r *http.Request) {
 
 }
 
-type KeyUser struct{}
-
 func UpdateUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
