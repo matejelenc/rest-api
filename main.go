@@ -20,6 +20,8 @@ func main() {
 	getRouter := router.Methods(http.MethodGet).Subrouter()
 	getRouter.HandleFunc("/", handlers.GetUsers)
 	getRouter.HandleFunc("/{id:[0-9]+}", handlers.GetUser)
+	getRouter.HandleFunc("/groups", handlers.GetGroups)
+	getRouter.HandleFunc("/groups/{id:[0-9]+}", handlers.GetGroup)
 
 	putRouter := router.Methods(http.MethodPut).Subrouter()
 	putRouter.HandleFunc("/{id:[0-9]+}", handlers.UpdateUser)

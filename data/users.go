@@ -8,6 +8,7 @@ type User struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	GroupID  int    `json:"group id"`
 	ID       int    `json:"id"`
 }
 
@@ -47,14 +48,24 @@ func UpdateUser(id int, u *User) error {
 }
 
 func DeleteUser(id int) error {
-	for i, p := range userList {
-		if p.ID == id {
-			userList = append(userList[:i], userList[i+1])
-			return nil
+	users := Users{}
+	exist := false
+	for _, p := range userList {
+		if p.ID != id {
+			users = append(users, p)
+		} else {
+			exist = true
 		}
 	}
 
-	return ErrUserNotFound
+	userList = users
+	if !exist {
+		return ErrUserNotFound
+	}
+
+	exist = false
+	return nil
+
 }
 
 var userList = Users{
@@ -62,12 +73,14 @@ var userList = Users{
 		Name:     "Baži",
 		Email:    "b@gmail.com",
 		Password: "b123",
+		GroupID:  0,
 		ID:       0,
 	},
 	&User{
 		Name:     "Kiki",
 		Email:    "k@gmail.com",
 		Password: "k123",
+		GroupID:  0,
 		ID:       1,
 	},
 }
