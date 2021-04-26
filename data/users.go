@@ -8,6 +8,7 @@ type User struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	InGroup  bool   `json:"in group"`
 	GroupID  int    `json:"group id"`
 	ID       int    `json:"id"`
 }
@@ -33,16 +34,31 @@ func GetUser(id int) (*User, int, error) {
 func CreateUser(u *User) {
 	u.ID = userList[len(userList)-1].ID + 1
 	userList = append(userList, u)
+
+	if u.InGroup {
+		AddToGroup(u)
+	}
 }
 
 func UpdateUser(id int, u *User) error {
+
 	for i, user := range userList {
 		if user.ID == id {
 			u.ID = id
 			userList[i] = u
+
+			if user.InGroup {
+				RemoveFromGroup(user)
+			}
+
+			if u.InGroup {
+				AddToGroup(u)
+			}
+
 			return nil
 		}
 	}
+
 	return ErrUserNotFound
 
 }
@@ -55,6 +71,7 @@ func DeleteUser(id int) error {
 			users = append(users, p)
 		} else {
 			exist = true
+			RemoveFromGroup(p)
 		}
 	}
 

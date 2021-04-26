@@ -5,9 +5,9 @@ import (
 )
 
 type Group struct {
-	Name    string `json:"name"`
-	ID      int    `json:"id"`
-	Members []int  `json:"members"`
+	Name    string  `json:"name"`
+	ID      int     `json:"id"`
+	Members []*User `json:"members"`
 }
 
 type Groups []*Group
@@ -63,6 +63,32 @@ func DeleteGroup(id int) error {
 	exist = false
 	return nil
 
+}
+
+func AddToGroup(u *User) {
+	for _, g := range groupList {
+		if g.ID == u.GroupID {
+			g.Members = append(g.Members, u)
+			return
+		}
+	}
+
+}
+
+func RemoveFromGroup(u *User) {
+	for _, g := range groupList {
+		if g.ID == u.GroupID {
+			members := Users{}
+			for _, m := range g.Members {
+				if m.ID != u.ID {
+					members = append(members, m)
+					return
+				}
+			}
+
+			g.Members = members
+		}
+	}
 }
 
 var groupList = Groups{
