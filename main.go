@@ -22,13 +22,13 @@ func main() {
 	getRouter.HandleFunc("/{id:[0-9]+}", handlers.GetUser)
 
 	putRouter := router.Methods(http.MethodPut).Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}/update", handlers.UpdateUser)
+	putRouter.HandleFunc("/{id:[0-9]+}", handlers.UpdateUser)
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
-	postRouter.HandleFunc("/new", handlers.CreateUser)
+	postRouter.HandleFunc("/", handlers.CreateUser)
 
 	deleteRouter := router.Methods(http.MethodDelete).Subrouter()
-	deleteRouter.HandleFunc("/{id:[0-9]+}/delete", handlers.GetUsers)
+	deleteRouter.HandleFunc("/{id:[0-9]+}", handlers.GetUsers)
 
 	server := &http.Server{
 		Addr:         ":8080",
