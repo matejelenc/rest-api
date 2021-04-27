@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -52,14 +53,7 @@ func UpdateGroup(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
-	g := data.Group{}
-	err = decoder.Decode(&g)
-	if err != nil {
-		fmt.Println("[ERROR] deserializing group", err)
-		http.Error(rw, "Error reading group", http.StatusBadRequest)
-		return
-	}
+	g := r.Context().Value(KeyGroup{}).(data.Group)
 
 	err = data.UpdateGroup(id, &g)
 	if err != nil {
@@ -68,14 +62,7 @@ func UpdateGroup(rw http.ResponseWriter, r *http.Request) {
 }
 
 func CreateGroup(rw http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	g := data.Group{}
-	err := decoder.Decode(&g)
-	if err != nil {
-		fmt.Println("[ERROR] deserializing user", err)
-		http.Error(rw, "Error reading user", http.StatusBadRequest)
-		return
-	}
+	g := r.Context().Value(KeyGroup{}).(data.Group)
 
 	data.CreateGroup(&g)
 }
@@ -92,4 +79,35 @@ func DeleteGroup(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(rw, "Group not found", http.StatusBadRequest)
 	}
+}
+
+type KeyGroup struct{}
+
+func MiddlewareValidateGroup(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		group := data.Group{}
+
+		err := group.GroupFromJSON(r.Body)
+		if err != nil {
+			fmt.Println("[ERROR] deserializing group", err.Error())
+			http.Error(rw, "Error reading group", http.StatusBadRequest)
+			return
+		}
+
+		err = group.ValidateGroup()
+		if err != nil {
+			fmt.Println("[ERROR] validating group", err)
+			http.Error(
+				rw,
+				fmt.Sprintf("Error validating group: %s", err),
+				http.StatusBadRequest,
+			)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), KeyGroup{}, group)
+		r = r.WithContext(ctx)
+
+		next.ServeHTTP(rw, r)
+	})
 }

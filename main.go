@@ -8,32 +8,43 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/matejelenc/rest-api/handlers"
-
 	"github.com/gorilla/mux"
+	"github.com/matejelenc/rest-api/handlers"
 )
 
 func main() {
 
 	router := mux.NewRouter()
 
-	getRouter := router.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", handlers.GetUsers)
-	getRouter.HandleFunc("/{id:[0-9]+}", handlers.GetUser)
-	getRouter.HandleFunc("/groups", handlers.GetGroups)
-	getRouter.HandleFunc("/groups/{id:[0-9]+}", handlers.GetGroup)
+	gr := router.PathPrefix("/groups").Subrouter()
+	gr.HandleFunc("", handlers.GetGroups).Methods(http.MethodGet)
+	gr.HandleFunc("/{id:[0-9]+}", handlers.GetGroup).Methods(http.MethodGet)
 
-	putRouter := router.Methods(http.MethodPut).Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}", handlers.UpdateUser)
-	putRouter.HandleFunc("/groups/{id:[0-9]+}", handlers.UpdateGroup)
+	grPost := gr.Methods(http.MethodPost).Subrouter()
+	grPost.HandleFunc("", handlers.CreateGroup)
+	grPost.Use(handlers.MiddlewareValidateGroup)
 
-	postRouter := router.Methods(http.MethodPost).Subrouter()
-	postRouter.HandleFunc("/", handlers.CreateUser)
-	postRouter.HandleFunc("/groups", handlers.CreateGroup)
+	grPut := gr.Methods(http.MethodPut).Subrouter()
+	grPut.HandleFunc("/{id:[0-9]+}", handlers.UpdateGroup)
+	grPut.Use(handlers.MiddlewareValidateGroup)
 
-	deleteRouter := router.Methods(http.MethodDelete).Subrouter()
-	deleteRouter.HandleFunc("/{id:[0-9]+}", handlers.DeleteUser)
-	deleteRouter.HandleFunc("/groups/{id:[0-9]+}", handlers.DeleteGroup)
+	grDelete := gr.Methods(http.MethodDelete).Subrouter()
+	grDelete.HandleFunc("/{id:[0-9]+}", handlers.DeleteGroup)
+
+	ur := router.PathPrefix("/users").Subrouter()
+	ur.HandleFunc("", handlers.GetUsers).Methods(http.MethodGet)
+	ur.HandleFunc("/{id:[0-9]+}", handlers.GetUser).Methods(http.MethodGet)
+
+	urPost := ur.Methods(http.MethodPost).Subrouter()
+	urPost.HandleFunc("", handlers.CreateUser)
+	urPost.Use(handlers.MiddlewareValidateUser)
+
+	urPut := ur.Methods(http.MethodPut).Subrouter()
+	urPut.HandleFunc("/{id:[0-9]+}", handlers.UpdateUser)
+	urPut.Use(handlers.MiddlewareValidateUser)
+
+	urDelete := ur.Methods(http.MethodDelete).Subrouter()
+	urDelete.HandleFunc("/{id:[0-9]+}", handlers.DeleteUser)
 
 	server := &http.Server{
 		Addr:         ":8080",

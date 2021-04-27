@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,8 +14,7 @@ import (
 func GetUsers(rw http.ResponseWriter, r *http.Request) {
 	u := data.GetUsers()
 
-	encoder := json.NewEncoder(rw)
-	err := encoder.Encode(u)
+	err := u.UsersToJSON(rw)
 	if err != nil {
 		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
 		return
@@ -36,8 +35,7 @@ func GetUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encoder := json.NewEncoder(rw)
-	err = encoder.Encode(u)
+	err = u.UserToJSON(rw)
 	if err != nil {
 		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
 	}
@@ -52,16 +50,9 @@ func UpdateUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
-	u := data.User{}
-	err = decoder.Decode(&u)
-	if err != nil {
-		fmt.Println("[ERROR] deserializing user", err)
-		http.Error(rw, "Error reading user", http.StatusBadRequest)
-		return
-	}
+	user := r.Context().Value(KeyUser{}).(data.User)
 
-	err = data.UpdateUser(id, &u)
+	err = data.UpdateUser(id, &user)
 	if err != nil {
 		http.Error(rw, "User not found", http.StatusBadRequest)
 	}
@@ -69,16 +60,9 @@ func UpdateUser(rw http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUser(rw http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	u := data.User{}
-	err := decoder.Decode(&u)
-	if err != nil {
-		fmt.Println("[ERROR] deserializing user", err)
-		http.Error(rw, "Error reading user", http.StatusBadRequest)
-		return
-	}
+	user := r.Context().Value(KeyUser{}).(data.User)
 
-	data.CreateUser(&u)
+	data.CreateUser(&user)
 }
 
 func DeleteUser(rw http.ResponseWriter, r *http.Request) {
@@ -93,4 +77,35 @@ func DeleteUser(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(rw, "User not found", http.StatusBadRequest)
 	}
+}
+
+type KeyUser struct{}
+
+func MiddlewareValidateUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		user := data.User{}
+
+		err := user.UserFromJSON(r.Body)
+		if err != nil {
+			fmt.Println("[ERROR] deserializing user", err)
+			http.Error(rw, "Error reading user", http.StatusBadRequest)
+			return
+		}
+
+		err = user.ValidateUser()
+		if err != nil {
+			fmt.Println("[ERROR] validating user", err)
+			http.Error(
+				rw,
+				fmt.Sprintf("Error validating user: %s", err),
+				http.StatusBadRequest,
+			)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), KeyUser{}, user)
+		r = r.WithContext(ctx)
+
+		next.ServeHTTP(rw, r)
+	})
 }

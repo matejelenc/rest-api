@@ -1,16 +1,26 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+
+	"github.com/go-playground/validator"
 )
 
 type Group struct {
-	Name    string  `json:"name"`
-	ID      int     `json:"id"`
+	Name    string  `json:"name" validate:"required"`
+	ID      int     `json:"-"`
 	Members []*User `json:"members"`
 }
 
 type Groups []*Group
+
+func (group *Group) ValidateGroup() error {
+	validate := validator.New()
+	return validate.Struct(group)
+
+}
 
 func GetGroups() Groups {
 	return groupList
@@ -89,6 +99,11 @@ func RemoveFromGroup(u *User) {
 			g.Members = members
 		}
 	}
+}
+
+func (g *Group) GroupFromJSON(r io.Reader) error {
+	e := json.NewDecoder(r)
+	return e.Decode(g)
 }
 
 var groupList = Groups{

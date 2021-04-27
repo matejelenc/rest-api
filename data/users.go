@@ -1,22 +1,32 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+
+	"github.com/go-playground/validator"
 )
 
 type User struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,gte=4"`
 	InGroup  bool   `json:"in group"`
 	GroupID  int    `json:"group id"`
-	ID       int    `json:"id"`
+	ID       int    `json:"-"`
 }
 
 type Users []*User
 
 func GetUsers() Users {
 	return userList
+}
+
+func (user *User) ValidateUser() error {
+	validate := validator.New()
+	return validate.Struct(user)
+
 }
 
 var ErrUserNotFound = fmt.Errorf("User not found")
@@ -83,6 +93,26 @@ func DeleteUser(id int) error {
 	exist = false
 	return nil
 
+}
+
+func (u *User) UserFromJSON(r io.Reader) error {
+	e := json.NewDecoder(r)
+	return e.Decode(u)
+}
+
+func (u *User) UserToJSON(w io.Writer) error {
+	e := json.NewEncoder(w)
+	return e.Encode(u)
+}
+
+func (u *Users) UsersFromJSON(r io.Reader) error {
+	e := json.NewDecoder(r)
+	return e.Decode(u)
+}
+
+func (u *Users) UsersToJSON(w io.Writer) error {
+	e := json.NewEncoder(w)
+	return e.Encode(u)
 }
 
 var userList = Users{
