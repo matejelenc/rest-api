@@ -1,0 +1,271 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  GenericError:
+    description: GenericError is a generic error message returned by a server
+    properties:
+      message:
+        type: string
+        x-go-name: Message
+    type: object
+    x-go-package: github.com/matejelenc/rest-api/handlers
+  ValidationError:
+    description: ValidationError is a collection of validation error messages
+    properties:
+      messages:
+        items:
+          type: string
+        type: array
+        x-go-name: Messages
+    type: object
+    x-go-package: github.com/matejelenc/rest-api/handlers
+  group:
+    properties:
+      id:
+        description: the id for the group
+        format: int64
+        minimum: 0
+        type: integer
+        x-go-name: ID
+      members:
+        description: List of all users in this group
+        items:
+          $ref: '#/definitions/user'
+        type: array
+        x-go-name: Members
+      name:
+        description: the name for this group
+        maxLength: 50
+        type: string
+        x-go-name: Name
+    required:
+    - name
+    type: object
+    x-go-name: Group
+    x-go-package: github.com/matejelenc/rest-api/data
+  user:
+    properties:
+      email:
+        description: the email for this user
+        type: string
+        x-go-name: Email
+      group id:
+        description: users group id
+        format: int64
+        type: integer
+        x-go-name: GroupID
+      id:
+        description: the id for the user
+        format: int64
+        minimum: 0
+        type: integer
+        x-go-name: ID
+      in group:
+        description: whether a user is in a group or not
+        type: boolean
+        x-go-name: InGroup
+      name:
+        description: the name for this user
+        maxLength: 50
+        type: string
+        x-go-name: Name
+      password:
+        description: the password for the user
+        minimum: 4
+        type: string
+        x-go-name: Password
+    required:
+    - name
+    - email
+    - password
+    type: object
+    x-go-name: User
+    x-go-package: github.com/matejelenc/rest-api/data
+info:
+  description: Documentation for User and Group Management API
+  title: of User and Group Management API
+  version: 1.0.0
+paths:
+  /groups:
+    get:
+      description: Returns a list of groups
+      operationId: getGroups
+      responses:
+        "200":
+          $ref: '#/responses/groupsResponse'
+      tags:
+      - groups
+    post:
+      description: Create a new group
+      operationId: createGroup
+      responses:
+        "200":
+          $ref: '#/responses/groupResponse'
+        "422":
+          $ref: '#/responses/errorValidation'
+        "501":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - groups
+  /groups/{id}:
+    delete:
+      description: Deletes a group
+      operationId: deleteGroup
+      parameters:
+      - description: The id of the group to access, update or delete from database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "201":
+          $ref: '#/responses/noContent'
+      tags:
+      - groups
+    get:
+      description: Return a single group
+      operationId: getGroup
+      parameters:
+      - description: The id of the group to access, update or delete from database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/groupResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - groups
+    put:
+      description: Update a group
+      operationId: updateGroup
+      parameters:
+      - description: The id of the group to access, update or delete from database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "201":
+          $ref: '#/responses/groupResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "422":
+          $ref: '#/responses/errorValidation'
+      tags:
+      - groups
+  /users:
+    get:
+      description: Returns a list of users
+      operationId: getUsers
+      responses:
+        "200":
+          $ref: '#/responses/usersResponse'
+      tags:
+      - users
+    post:
+      description: Create a new user
+      operationId: createUser
+      responses:
+        "200":
+          $ref: '#/responses/userResponse'
+        "422":
+          $ref: '#/responses/errorValidation'
+        "501":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Deletes a user
+      operationId: deleteUser
+      parameters:
+      - description: The id of the user to access, update or delete from database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "201":
+          $ref: '#/responses/noContent'
+      tags:
+      - users
+    get:
+      description: Return a single user
+      operationId: getUser
+      parameters:
+      - description: The id of the user to access, update or delete from database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/userResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+      tags:
+      - users
+    put:
+      description: Update a user
+      operationId: updateUser
+      parameters:
+      - description: The id of the user to access, update or delete from database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "201":
+          $ref: '#/responses/noContentResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "422":
+          $ref: '#/responses/errorValidation'
+      tags:
+      - users
+produces:
+- application/json
+responses:
+  errorResponse:
+    description: Generic error message returned as a string
+    schema:
+      $ref: '#/definitions/GenericError'
+  errorValidation:
+    description: Validation errors defined as an array of strings
+    schema:
+      $ref: '#/definitions/ValidationError'
+  groupResponse:
+    description: A single group returns in the response
+    schema:
+      $ref: '#/definitions/group'
+  groupsResponse:
+    description: A list of groups returns in the response
+    schema:
+      items:
+        $ref: '#/definitions/group'
+      type: array
+  noContent:
+    description: ""
+  userResponse:
+    description: A single user returns in the response
+    schema:
+      $ref: '#/definitions/user'
+  usersResponse:
+    description: A list of users returns in the response
+    schema:
+      items:
+        $ref: '#/definitions/user'
+      type: array
+schemes:
+- http
+swagger: "2.0"
