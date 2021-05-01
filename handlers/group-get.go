@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/matejelenc/rest-api/data"
@@ -15,43 +14,54 @@ import (
 //	200: groupsResponse
 
 //GetGroups returns all the groups in the database
-func GetGroups(rw http.ResponseWriter, r *http.Request) {
-	g := data.GetGroups()
+func GetGroups(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 
-	encoder := json.NewEncoder(rw)
-	err := encoder.Encode(g)
-	if err != nil {
-		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
+	var groups []data.Group
+	foundGroups := DB.Find(&groups)
+	if foundGroups.Error != nil {
+		http.Error(w, "No groups exist", http.StatusBadRequest)
 		return
 	}
 
+	json.NewEncoder(w).Encode(&groups)
 }
 
-// swagger:route GET /groups/{id} groups getGroup
-// Return a single group
-// responses:
-//	200: groupResponse
-//	404: errorResponse
+func GetGroup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 
-//GetGroup returns a specified group
-func GetGroup(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(rw, "Unable to convert id", http.StatusBadRequest)
+	params := mux.Vars(r)
+
+	var group data.Group
+
+	foundGroup := DB.First(&group, params["id"])
+	if foundGroup.Error != nil {
+		http.Error(w, "Group not found", http.StatusBadRequest)
 		return
 	}
 
-	g, err := data.GetGroup(id)
-	if err != nil {
-		http.Error(rw, "Group not found", http.StatusBadRequest)
+	json.NewEncoder(w).Encode(group)
+}
+
+func GetMembers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+
+	params := mux.Vars(r)
+	var group data.Group
+	var people []data.Person
+
+	foundGroup := DB.First(&group, params["id"])
+	if foundGroup.Error != nil {
+		http.Error(w, "Group not found", http.StatusBadRequest)
 		return
 	}
 
-	encoder := json.NewEncoder(rw)
-	err = encoder.Encode(g)
-	if err != nil {
-		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
+	foundMembers := DB.Where("group_name = ?", group.Name).Find(&people)
+	if foundMembers.Error != nil {
+		http.Error(w, "This group has no members", http.StatusBadRequest)
 		return
 	}
+
+	json.NewEncoder(w).Encode(&people)
+
 }

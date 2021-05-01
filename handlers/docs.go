@@ -49,7 +49,7 @@ type errorValidationWrapper struct {
 type usersResponse struct {
 	// All current users in the system
 	// in: body
-	Body []data.User
+	Body []data.Person
 }
 
 // A single user returns in the response
@@ -57,7 +57,7 @@ type usersResponse struct {
 type userResponse struct {
 	// A specific user
 	// in: body
-	Body data.User
+	Body data.Person
 }
 
 // swagger:parameters updateUser deleteUser getUser

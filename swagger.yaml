@@ -10,61 +10,42 @@ definitions:
         x-go-name: Message
     type: object
     x-go-package: github.com/matejelenc/rest-api/handlers
-  ValidationError:
-    description: ValidationError is a collection of validation error messages
+  Model:
+    description: |-
+      Model base model definition, including fields `ID`, `CreatedAt`, `UpdatedAt`, `DeletedAt`, which could be embedded in your models
+      type User struct {
+      gorm.Model
+      }
     properties:
-      messages:
-        items:
-          type: string
-        type: array
-        x-go-name: Messages
-    type: object
-    x-go-package: github.com/matejelenc/rest-api/handlers
-  group:
-    properties:
-      id:
-        description: the id for the group
-        format: int64
-        minimum: 0
-        type: integer
-        x-go-name: ID
-      members:
-        description: List of all users in this group
-        items:
-          $ref: '#/definitions/user'
-        type: array
-        x-go-name: Members
-      name:
-        description: the name for this group
-        maxLength: 50
+      CreatedAt:
+        format: date-time
         type: string
-        x-go-name: Name
-    required:
-    - name
+      DeletedAt:
+        format: date-time
+        type: string
+      ID:
+        format: uint64
+        type: integer
+      UpdatedAt:
+        format: date-time
+        type: string
     type: object
-    x-go-name: Group
-    x-go-package: github.com/matejelenc/rest-api/data
-  user:
+    x-go-package: github.com/jinzhu/gorm
+  ObjectID:
+    items:
+      format: uint8
+      type: integer
+    title: ObjectID is the BSON ObjectID type.
+    type: array
+    x-go-package: go.mongodb.org/mongo-driver/bson/primitive
+  User:
     properties:
       email:
         description: the email for this user
         type: string
         x-go-name: Email
-      group id:
-        description: users group id
-        format: int64
-        type: integer
-        x-go-name: GroupID
       id:
-        description: the id for the user
-        format: int64
-        minimum: 0
-        type: integer
-        x-go-name: ID
-      in group:
-        description: whether a user is in a group or not
-        type: boolean
-        x-go-name: InGroup
+        $ref: '#/definitions/ObjectID'
       name:
         description: the name for this user
         maxLength: 50
@@ -80,7 +61,77 @@ definitions:
     - email
     - password
     type: object
-    x-go-name: User
+    x-go-package: github.com/matejelenc/rest-api/data
+  ValidationError:
+    description: ValidationError is a collection of validation error messages
+    properties:
+      messages:
+        items:
+          type: string
+        type: array
+        x-go-name: Messages
+    type: object
+    x-go-package: github.com/matejelenc/rest-api/handlers
+  group:
+    properties:
+      CreatedAt:
+        format: date-time
+        type: string
+      DeletedAt:
+        format: date-time
+        type: string
+      ID:
+        format: uint64
+        type: integer
+      UpdatedAt:
+        format: date-time
+        type: string
+      name:
+        description: the name for this group
+        type: string
+        x-go-name: Name
+    required:
+    - name
+    type: object
+    x-go-name: Group
+    x-go-package: github.com/matejelenc/rest-api/data
+  user:
+    properties:
+      CreatedAt:
+        format: date-time
+        type: string
+      DeletedAt:
+        format: date-time
+        type: string
+      ID:
+        format: uint64
+        type: integer
+      UpdatedAt:
+        format: date-time
+        type: string
+      email:
+        description: the email for this user
+        type: string
+        x-go-name: Email
+      group name:
+        description: the name of the group a user is in
+        type: string
+        x-go-name: GroupName
+      name:
+        description: the name for this user
+        type: string
+        x-go-name: Name
+      password:
+        description: the password for the user
+        minimum: 4
+        type: string
+        x-go-name: Password
+    required:
+    - name
+    - email
+    - password
+    type: object
+    x-go-name: Person
     x-go-package: github.com/matejelenc/rest-api/data
 info:
   description: Documentation for User and Group Management API
@@ -259,12 +310,12 @@ responses:
   userResponse:
     description: A single user returns in the response
     schema:
-      $ref: '#/definitions/user'
+      $ref: '#/definitions/User'
   usersResponse:
     description: A list of users returns in the response
     schema:
       items:
-        $ref: '#/definitions/user'
+        $ref: '#/definitions/User'
       type: array
 schemes:
 - http
