@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"github.com/jinzhu/gorm"
 	"github.com/matejelenc/rest-api/data"
 )
+
+var DB *gorm.DB
 
 // swagger:route POST /groups groups createGroup
 // Create a new group
@@ -15,8 +19,17 @@ import (
 //  501: errorResponse
 
 //CreateGroup creates a group with requests context
-func CreateGroup(rw http.ResponseWriter, r *http.Request) {
-	g := r.Context().Value(KeyGroup{}).(data.Group)
+func CreateGroup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 
-	data.CreateGroup(&g)
+	group := r.Context().Value(KeyGroup{}).(data.Group)
+
+	createdGroup := DB.Create(&group)
+	err = createdGroup.Error
+	if err != nil {
+		http.Error(w, "Could not create a group", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&group)
 }

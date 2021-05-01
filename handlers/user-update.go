@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/matejelenc/rest-api/data"
@@ -17,19 +17,36 @@ import (
 //  422: errorValidation
 
 //UpdateUser updates a user with requests context
-func UpdateUser(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(rw, "Unable to convert id", http.StatusBadRequest)
+func UpdatePerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+
+	params := mux.Vars(r)
+	var person data.Person
+	var group data.Group
+
+	foundPerson := DB.First(&person, params["id"])
+	if foundPerson.Error != nil {
+		http.Error(w, "User not found", http.StatusBadRequest)
 		return
 	}
 
-	user := r.Context().Value(KeyUser{}).(data.User)
+	upPerson := r.Context().Value(KeyUpdateUser{}).(data.Person)
 
-	err = data.UpdateUser(id, &user)
-	if err != nil {
-		http.Error(rw, "User not found", http.StatusBadRequest)
+	if upPerson.GroupName != "" {
+		foundGroup := DB.First(&group, "Name = ?", upPerson.GroupName)
+		if foundGroup.Error != nil {
+			http.Error(w, "Group not found", http.StatusBadRequest)
+			return
+		}
 	}
 
+	updatedPerson := DB.Model(&person).Updates(upPerson)
+	if updatedPerson.Error != nil {
+		http.Error(w, "Could not update user", http.StatusInternalServerError)
+		return
+	}
+
+	DB.First(&person, params["id"])
+
+	json.NewEncoder(w).Encode(person)
 }
