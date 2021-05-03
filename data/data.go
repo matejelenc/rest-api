@@ -8,6 +8,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var DB *gorm.DB
+
 //swagger:model user
 type Person struct {
 	// creates a unique id, created at, updated at and deleted at fields for this user

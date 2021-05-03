@@ -1,4 +1,4 @@
-package handlers
+package security
 
 import (
 	"context"
@@ -6,20 +6,12 @@ import (
 	"net/http"
 
 	"github.com/matejelenc/rest-api/data"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/bcrypt"
 )
-
-var CLIENT, err = mongo.NewClient(options.Client().ApplyURI("mongodb+srv://Matej:MambaMentality11@user-group.amopm.mongodb.net/user-group?retryWrites=true&w=majority"))
-var database = CLIENT.Database("Database")
-var userDB = database.Collection("users")
-var groupDB = database.Collection("groups")
 
 type KeyUser struct{}
 
 // MiddlewareValidatUser validates the user in the request and calls next if there are no errors
-func MiddlewareValidateUser(next http.Handler) http.Handler {
+func MiddlewareCreateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 
 		//deserializes the user from the request
@@ -87,12 +79,12 @@ func MiddlewareValidateGroup(next http.Handler) http.Handler {
 type KeyUpdateUser struct{}
 
 // MiddlewareValidatUser validates the user in the request and calls next if there are no errors
-func MiddlewareValidateUserUpdate(next http.Handler) http.Handler {
+func MiddlewareUpdateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 
 		//deserializes the user from the request
 		var upPerson data.Person
-		err = json.NewDecoder(r.Body).Decode(&upPerson)
+		err := json.NewDecoder(r.Body).Decode(&upPerson)
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			rw.Write([]byte(err.Error()))
@@ -123,12 +115,4 @@ func MiddlewareValidateUserUpdate(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 		next.ServeHTTP(rw, r)
 	})
-}
-
-func HashPassword(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-}
-
-func VerifyPassword(hashedPassword, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

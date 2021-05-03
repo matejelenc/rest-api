@@ -16,6 +16,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/matejelenc/rest-api/data"
 	"github.com/matejelenc/rest-api/handlers"
+	"github.com/matejelenc/rest-api/security"
 )
 
 func main() {
@@ -35,14 +36,16 @@ func main() {
 	} else {
 		fmt.Println("Successfully connected to database!")
 	}
-	handlers.DB = conn
+	data.DB = conn
 
-	defer handlers.DB.Close()
-	handlers.DB.AutoMigrate(&data.Group{})
-	handlers.DB.AutoMigrate(&data.Person{})
+	defer data.DB.Close()
+	data.DB.AutoMigrate(&data.Group{})
+	data.DB.AutoMigrate(&data.Person{})
 
 	//router
 	router := mux.NewRouter()
+
+	router.HandleFunc("/login", handlers.Login)
 
 	//subrouter for groups
 	gr := router.PathPrefix("/groups").Subrouter()
@@ -53,7 +56,7 @@ func main() {
 	//subrouter for groups that handles POST requests
 	grPost := gr.Methods(http.MethodPost).Subrouter()
 	grPost.HandleFunc("", handlers.CreateGroup)
-	grPost.Use(handlers.MiddlewareValidateGroup)
+	grPost.Use(security.MiddlewareValidateGroup)
 
 	//subrouter for groups that handles PUT requests
 	grPatch := gr.Methods(http.MethodPatch).Subrouter()
@@ -71,12 +74,12 @@ func main() {
 	//subrouter for users that handles POST requests
 	urPost := ur.Methods(http.MethodPost).Subrouter()
 	urPost.HandleFunc("", handlers.CreatePerson)
-	urPost.Use(handlers.MiddlewareValidateUser)
+	urPost.Use(security.MiddlewareCreateUser)
 
 	//subrouter for users that handles PUT requests
 	urPatch := ur.Methods(http.MethodPatch).Subrouter()
 	urPatch.HandleFunc("/{id}", handlers.UpdatePerson)
-	urPatch.Use(handlers.MiddlewareValidateUserUpdate)
+	urPatch.Use(security.MiddlewareUpdateUser)
 
 	//subrouter for user that handles DELETE requests
 	urDelete := ur.Methods(http.MethodDelete).Subrouter()

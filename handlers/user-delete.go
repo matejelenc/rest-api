@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/matejelenc/rest-api/data"
+	"github.com/matejelenc/rest-api/security"
 )
 
 // swagger:route DELETE /users/{id} users deleteUser
@@ -20,15 +22,30 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var person data.Person
 
-	foundPerson := DB.First(&person, params["id"])
+	id, err := security.ValidateToken(w, r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	if id != params["id"] {
+		if id != os.Getenv("ADMIN_ID") {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, "User not authorized", http.StatusBadRequest)
+			return
+		}
+	}
+
+	foundPerson := data.DB.First(&person, params["id"])
 	if err := foundPerson.Error; err != nil {
 		json.NewEncoder(w).Encode(err)
 		http.Error(w, "User not found", http.StatusBadRequest)
 		return
 	}
 
-	deletedPerson := DB.Delete(&person)
-	if err = deletedPerson.Error; err != nil {
+	deletedPerson := data.DB.Delete(&person)
+	if err := deletedPerson.Error; err != nil {
 		json.NewEncoder(w).Encode(err)
 		http.Error(w, "User could not be deleted", http.StatusInternalServerError)
 		return
