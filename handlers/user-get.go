@@ -13,11 +13,13 @@ import (
 // Returns a list of users
 // responses:
 //	200: usersResponse
+//  400: badRequestResponse
 
-//GEtUsers returns all users from the database
+//GetUsers returns all users from the database
 func GetPeople(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
+	//validate the jwt token
 	_, err := security.ValidateToken(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -25,6 +27,7 @@ func GetPeople(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//get all users
 	var people []data.Person
 	foundPeople := data.DB.Find(&people)
 	if foundPeople.Error != nil {
@@ -35,25 +38,28 @@ func GetPeople(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&people)
 }
 
+// swagger:route GET /users/{id} users getUser
+// Returns a user
+// responses:
+//	200: usersResponse
+//  400: badRequestResponse
+
+//GetPerson returns a user
 func GetPerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
 	params := mux.Vars(r)
 	var person data.Person
 
-	id, err := security.ValidateToken(w, r)
+	//validate the jwt token
+	_, err := security.ValidateToken(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	if id != params["id"] {
-		w.WriteHeader(http.StatusUnauthorized)
-		http.Error(w, "User not authorized", http.StatusBadRequest)
-		return
-	}
-
+	//get the user
 	foundPerson := data.DB.First(&person, params["id"])
 	if foundPerson.Error != nil {
 		http.Error(w, "User not found", http.StatusBadRequest)

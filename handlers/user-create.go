@@ -12,14 +12,15 @@ import (
 // Create a new user
 //
 // responses:
-//	200: userResponse
-//  422: errorValidation
-//  501: errorResponse
+//	201: userResponse
+//  401: unauthorizedResponse
+//  400: badRequestResponse
 
 //CreateUser creates a user with the requests context
 func CreatePerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
+	//validate the token
 	_, err := security.ValidateToken(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -30,6 +31,7 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 	var group data.Group
 	person := r.Context().Value(security.KeyUser{}).(data.Person)
 
+	//check if the users group exists
 	if person.GroupName != "" {
 		foundGroup := data.DB.Where("name = ?", person.GroupName).First(&group)
 		if foundGroup.Error != nil {
@@ -39,6 +41,7 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//create the user
 	createdPerson := data.DB.Create(&person)
 	err = createdPerson.Error
 	if err != nil {

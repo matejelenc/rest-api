@@ -13,14 +13,15 @@ import (
 // Create a new group
 //
 // responses:
-//	200: groupResponse
-//  422: errorValidation
-//  501: errorResponse
+//	201: groupResponse
+//  401: unauthorizedResponse
+//  400: badRequestResponse
 
 //CreateGroup creates a group with requests context
 func CreateGroup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
+	//validate the jwt token
 	id, err := security.ValidateToken(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -28,6 +29,7 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//check if the user is authorized for this request
 	if id != os.Getenv("ADMIN_ID") {
 		w.WriteHeader(http.StatusUnauthorized)
 		http.Error(w, "User not authorized", http.StatusBadRequest)
@@ -36,6 +38,7 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 	group := r.Context().Value(security.KeyGroup{}).(data.Group)
 
+	//create the group
 	createdGroup := data.DB.Create(&group)
 	err = createdGroup.Error
 	if err != nil {

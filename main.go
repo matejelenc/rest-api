@@ -21,6 +21,7 @@ import (
 
 func main() {
 
+	//declaring environment variables used for connecting to the database
 	dialect := os.Getenv("DIALECT")
 	host := os.Getenv("HOST")
 	dbPort := os.Getenv("DBPORT")
@@ -28,6 +29,7 @@ func main() {
 	dbName := os.Getenv("NAME")
 	password := os.Getenv("PASSWORD")
 
+	//connecting to the database
 	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s port=%s", host, user, dbName, password, dbPort)
 	var err error
 	conn, err := gorm.Open(dialect, dbURI)
@@ -38,13 +40,17 @@ func main() {
 	}
 	data.DB = conn
 
+	//the database will close once the server stops running
 	defer data.DB.Close()
+
+	//data models for groups and users are created in the database
 	data.DB.AutoMigrate(&data.Group{})
 	data.DB.AutoMigrate(&data.Person{})
 
 	//router
 	router := mux.NewRouter()
 
+	//handling user login
 	router.HandleFunc("/login", handlers.Login)
 
 	//subrouter for groups

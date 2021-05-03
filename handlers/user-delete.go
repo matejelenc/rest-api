@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -14,6 +15,8 @@ import (
 // Deletes a user
 // responses:
 //	201: noContent
+//  401: unauthorizedResponse
+//  400: badRequestResponse
 
 //DeleteUser handles DELETE requests and removes a user from the database
 func DeletePerson(w http.ResponseWriter, r *http.Request) {
@@ -22,6 +25,7 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var person data.Person
 
+	//validate the jwt token
 	id, err := security.ValidateToken(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -29,6 +33,7 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//check if the user is authorized for this request
 	if id != params["id"] {
 		if id != os.Getenv("ADMIN_ID") {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -37,6 +42,7 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//get the user
 	foundPerson := data.DB.First(&person, params["id"])
 	if err := foundPerson.Error; err != nil {
 		json.NewEncoder(w).Encode(err)
@@ -44,6 +50,7 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//delete the user
 	deletedPerson := data.DB.Delete(&person)
 	if err := deletedPerson.Error; err != nil {
 		json.NewEncoder(w).Encode(err)
@@ -51,5 +58,5 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(&person)
+	json.NewEncoder(w).Encode(fmt.Sprintf("User %v was successfully deleted", person.Name))
 }

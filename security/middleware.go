@@ -31,6 +31,7 @@ func MiddlewareCreateUser(next http.Handler) http.Handler {
 			return
 		}
 
+		//hash the password
 		hashedP, err := HashPassword(user.Password)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
@@ -91,11 +92,13 @@ func MiddlewareUpdateUser(next http.Handler) http.Handler {
 			return
 		}
 
+		//check the password
 		if len(upPerson.Password) > 0 && len(upPerson.Password) < 4 {
 			http.Error(rw, "Password too short", http.StatusBadRequest)
 			return
 		}
 
+		//hash the password
 		hashedP, err := HashPassword(upPerson.Password)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
@@ -105,6 +108,7 @@ func MiddlewareUpdateUser(next http.Handler) http.Handler {
 
 		upPerson.Password = string(hashedP)
 
+		//validate the email
 		if upPerson.Email != "" && data.ValidateEmail(upPerson.Email) != nil {
 			http.Error(rw, "Invalid email", http.StatusBadRequest)
 			return

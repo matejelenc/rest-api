@@ -11,15 +11,18 @@ import (
 	"github.com/matejelenc/rest-api/data"
 )
 
+//my key used for signing tokens
 var secretKey = []byte(os.Getenv("JWT_KEY"))
 
+//claims used when creating a jwt token
 type CustomClaims struct {
 	UserID string
 	jwt.StandardClaims
 }
 
+//GenerateJWT creates a jwt token for a logged in user
 func GenerateJWT(user *data.Person) (string, error) {
-	expirationTime := time.Now().Add(time.Minute * 30)
+	expirationTime := time.Now().Add(time.Hour * 24)
 
 	claims := &CustomClaims{
 		UserID: strconv.Itoa(int(user.ID)),
@@ -32,6 +35,7 @@ func GenerateJWT(user *data.Person) (string, error) {
 	return token.SignedString(secretKey)
 }
 
+//ValidateToken validates a jwt token
 func ValidateToken(w http.ResponseWriter, r *http.Request) (string, error) {
 	cookie, err := r.Cookie("Token")
 	if err != nil {

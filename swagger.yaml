@@ -2,14 +2,12 @@ basePath: /
 consumes:
 - application/json
 definitions:
-  GenericError:
-    description: GenericError is a generic error message returned by a server
-    properties:
-      message:
-        type: string
-        x-go-name: Message
-    type: object
-    x-go-package: github.com/matejelenc/rest-api/handlers
+  Groups:
+    description: Groups defines a slice of Group
+    items:
+      $ref: '#/definitions/group'
+    type: array
+    x-go-package: github.com/matejelenc/rest-api/data
   Model:
     description: |-
       Model base model definition, including fields `ID`, `CreatedAt`, `UpdatedAt`, `DeletedAt`, which could be embedded in your models
@@ -31,47 +29,12 @@ definitions:
         type: string
     type: object
     x-go-package: github.com/jinzhu/gorm
-  ObjectID:
+  Users:
+    description: Users defines a slice of User
     items:
-      format: uint8
-      type: integer
-    title: ObjectID is the BSON ObjectID type.
+      $ref: '#/definitions/user'
     type: array
-    x-go-package: go.mongodb.org/mongo-driver/bson/primitive
-  User:
-    properties:
-      email:
-        description: the email for this user
-        type: string
-        x-go-name: Email
-      id:
-        $ref: '#/definitions/ObjectID'
-      name:
-        description: the name for this user
-        maxLength: 50
-        type: string
-        x-go-name: Name
-      password:
-        description: the password for the user
-        minimum: 4
-        type: string
-        x-go-name: Password
-    required:
-    - name
-    - email
-    - password
-    type: object
     x-go-package: github.com/matejelenc/rest-api/data
-  ValidationError:
-    description: ValidationError is a collection of validation error messages
-    properties:
-      messages:
-        items:
-          type: string
-        type: array
-        x-go-name: Messages
-    type: object
-    x-go-package: github.com/matejelenc/rest-api/handlers
   group:
     properties:
       CreatedAt:
@@ -145,72 +108,79 @@ paths:
       responses:
         "200":
           $ref: '#/responses/groupsResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
       tags:
       - groups
     post:
       description: Create a new group
       operationId: createGroup
       responses:
-        "200":
+        "201":
           $ref: '#/responses/groupResponse'
-        "422":
-          $ref: '#/responses/errorValidation'
-        "501":
-          $ref: '#/responses/errorResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+        "401":
+          $ref: '#/responses/unauthorizedResponse'
       tags:
       - groups
   /groups/{id}:
     delete:
       description: Deletes a group
       operationId: deleteGroup
-      parameters:
-      - description: The id of the group to access, update or delete from database
-        format: int64
-        in: path
-        name: ID
-        required: true
-        type: integer
       responses:
         "201":
           $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+        "401":
+          $ref: '#/responses/unauthorizedResponse'
       tags:
       - groups
     get:
-      description: Return a single group
+      description: Returns a group
       operationId: getGroup
-      parameters:
-      - description: The id of the group to access, update or delete from database
-        format: int64
-        in: path
-        name: ID
-        required: true
-        type: integer
       responses:
         "200":
           $ref: '#/responses/groupResponse'
-        "404":
-          $ref: '#/responses/errorResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
       tags:
       - groups
-    put:
+    patch:
       description: Update a group
       operationId: updateGroup
-      parameters:
-      - description: The id of the group to access, update or delete from database
-        format: int64
-        in: path
-        name: ID
-        required: true
-        type: integer
       responses:
         "201":
           $ref: '#/responses/groupResponse'
-        "404":
-          $ref: '#/responses/errorResponse'
-        "422":
-          $ref: '#/responses/errorValidation'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+        "401":
+          $ref: '#/responses/unauthorizedResponse'
       tags:
       - groups
+  /groups/{id}/members:
+    get:
+      description: Returns members of a group
+      operationId: getMembers
+      responses:
+        "200":
+          $ref: '#/responses/membersResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+      tags:
+      - groups
+  /login:
+    post:
+      description: Login a user
+      operationId: loginUser
+      responses:
+        "201":
+          $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+      tags:
+      - users
   /users:
     get:
       description: Returns a list of users
@@ -218,18 +188,20 @@ paths:
       responses:
         "200":
           $ref: '#/responses/usersResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
       tags:
       - users
     post:
       description: Create a new user
       operationId: createUser
       responses:
-        "200":
+        "201":
           $ref: '#/responses/userResponse'
-        "422":
-          $ref: '#/responses/errorValidation'
-        "501":
-          $ref: '#/responses/errorResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+        "401":
+          $ref: '#/responses/unauthorizedResponse'
       tags:
       - users
   /users/{id}:
@@ -246,10 +218,14 @@ paths:
       responses:
         "201":
           $ref: '#/responses/noContent'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+        "401":
+          $ref: '#/responses/unauthorizedResponse'
       tags:
       - users
     get:
-      description: Return a single user
+      description: Returns a user
       operationId: getUser
       parameters:
       - description: The id of the user to access, update or delete from database
@@ -260,12 +236,12 @@ paths:
         type: integer
       responses:
         "200":
-          $ref: '#/responses/userResponse'
-        "404":
-          $ref: '#/responses/errorResponse'
+          $ref: '#/responses/usersResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
       tags:
       - users
-    put:
+    patch:
       description: Update a user
       operationId: updateUser
       parameters:
@@ -276,25 +252,22 @@ paths:
         required: true
         type: integer
       responses:
-        "201":
-          $ref: '#/responses/noContentResponse'
-        "404":
-          $ref: '#/responses/errorResponse'
-        "422":
-          $ref: '#/responses/errorValidation'
+        "200":
+          $ref: '#/responses/userResponse'
+        "400":
+          $ref: '#/responses/badRequestResponse'
+        "401":
+          $ref: '#/responses/unauthorizedResponse'
       tags:
       - users
 produces:
 - application/json
 responses:
-  errorResponse:
-    description: Generic error message returned as a string
-    schema:
-      $ref: '#/definitions/GenericError'
-  errorValidation:
-    description: Validation errors defined as an array of strings
-    schema:
-      $ref: '#/definitions/ValidationError'
+  badRequestResponse:
+    description: A bad request error is returned
+    headers:
+      message:
+        type: string
   groupResponse:
     description: A single group returns in the response
     schema:
@@ -302,21 +275,26 @@ responses:
   groupsResponse:
     description: A list of groups returns in the response
     schema:
-      items:
-        $ref: '#/definitions/group'
-      type: array
+      $ref: '#/definitions/Groups'
+  membersResponse:
+    description: Members of a group are returned in the response
+    schema:
+      $ref: '#/definitions/Users'
   noContent:
     description: ""
+  unauthorizedResponse:
+    description: An unauthorized error is returned
+    headers:
+      message:
+        type: string
   userResponse:
     description: A single user returns in the response
     schema:
-      $ref: '#/definitions/User'
+      $ref: '#/definitions/user'
   usersResponse:
     description: A list of users returns in the response
     schema:
-      items:
-        $ref: '#/definitions/User'
-      type: array
+      $ref: '#/definitions/Users'
 schemes:
 - http
 swagger: "2.0"

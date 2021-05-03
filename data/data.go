@@ -13,6 +13,8 @@ var DB *gorm.DB
 //swagger:model user
 type Person struct {
 	// creates a unique id, created at, updated at and deleted at fields for this user
+	//
+	// required: false
 	gorm.Model
 	// the name for this user
 	//
@@ -36,6 +38,8 @@ type Person struct {
 //swagger:model group
 type Group struct {
 	// creates a unique id, created at, updated at and deleted at fields for this group
+	//
+	// required: false
 	gorm.Model
 	// the name for this group
 	//
@@ -45,6 +49,9 @@ type Group struct {
 
 //Groups defines a slice of Group
 type Groups []*Group
+
+//Users defines a slice of User
+type Users []*Person
 
 //error raised when a group is not found
 var ErrGroupNotFound = fmt.Errorf("Group not found")
@@ -73,6 +80,7 @@ func (user *Person) ValidateUser() error {
 	return nil
 }
 
+//ValidateEmail validates an email
 func ValidateEmail(email string) error {
 	if !email_reg.MatchString(email) {
 		return fmt.Errorf("Invalid email")
