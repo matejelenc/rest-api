@@ -14,12 +14,35 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/joho/godotenv"
 	"github.com/matejelenc/rest-api/data"
 	"github.com/matejelenc/rest-api/handlers"
 	"github.com/matejelenc/rest-api/security"
 )
 
+func CreateAdmin() error {
+	var person data.Person
+	foundPerson := data.DB.First(&person, os.Getenv("ADMIN_ID"))
+	if foundPerson.Error != nil {
+		person.Name = os.Getenv("ADMIN_NAME")
+		person.Email = os.Getenv("EMAIL")
+		pass, _ := security.HashPassword(os.Getenv("PASSWORD"))
+		person.Password = string(pass)
+		createdPerson := data.DB.Create(&person)
+		if createdPerson.Error != nil {
+			return fmt.Errorf("Cannot get admin")
+		}
+	}
+
+	return nil
+}
+
 func main() {
+	//loading env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	//declaring environment variables used for connecting to the database
 	dialect := os.Getenv("DIALECT")
@@ -31,7 +54,6 @@ func main() {
 
 	//connecting to the database
 	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s port=%s", host, user, dbName, password, dbPort)
-	var err error
 	conn, err := gorm.Open(dialect, dbURI)
 	if err != nil {
 		log.Fatal(err)
@@ -39,6 +61,12 @@ func main() {
 		fmt.Println("Successfully connected to database!")
 	}
 	data.DB = conn
+
+	//Check that the admin exists
+	err = CreateAdmin()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	//the database will close once the server stops running
 	defer data.DB.Close()
