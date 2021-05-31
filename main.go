@@ -61,6 +61,10 @@ func main() {
 		fmt.Println("Successfully connected to database!")
 	}
 	data.DB = conn
+	
+	//data models for groups and users are created in the database
+	data.DB.AutoMigrate(&data.Group{})
+	data.DB.AutoMigrate(&data.Person{})
 
 	//Check that the admin exists
 	err = CreateAdmin()
@@ -70,10 +74,6 @@ func main() {
 
 	//the database will close once the server stops running
 	defer data.DB.Close()
-
-	//data models for groups and users are created in the database
-	data.DB.AutoMigrate(&data.Group{})
-	data.DB.AutoMigrate(&data.Person{})
 
 	//router
 	router := mux.NewRouter()
