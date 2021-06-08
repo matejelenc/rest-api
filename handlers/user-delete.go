@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/matejelenc/rest-api/data"
-	"github.com/matejelenc/rest-api/security"
 )
 
 // swagger:route DELETE /users/{id} users deleteUser
@@ -24,23 +22,6 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	var person data.Person
-
-	//validate the jwt token
-	id, err := security.ValidateToken(w, r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	//check if the user is authorized for this request
-	if id != params["id"] {
-		if id != os.Getenv("ADMIN_ID") {
-			w.WriteHeader(http.StatusUnauthorized)
-			http.Error(w, "User not authorized", http.StatusBadRequest)
-			return
-		}
-	}
 
 	//get the user
 	foundPerson := data.DB.First(&person, params["id"])
@@ -60,3 +41,5 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(fmt.Sprintf("User %v was successfully deleted", person.Name))
 }
+
+type KeyUpdateUser struct{}

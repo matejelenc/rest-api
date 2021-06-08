@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/matejelenc/rest-api/data"
-	"github.com/matejelenc/rest-api/security"
 )
 
 // swagger:route GET /users users getUsers
@@ -19,13 +18,13 @@ import (
 func GetPeople(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
-	//validate the jwt token
+	/*//validate the jwt token
 	_, err := security.ValidateToken(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(err.Error()))
 		return
-	}
+	}*/
 
 	//get all users
 	var people []data.Person
@@ -35,7 +34,12 @@ func GetPeople(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(&people)
+	var _people []string
+	for i := 0; i < len(people); i++ {
+		_people = append(_people, people[i].Name)
+	}
+
+	json.NewEncoder(w).Encode(&_people)
 }
 
 // swagger:route GET /users/{id} users getUser
@@ -51,14 +55,6 @@ func GetPerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var person data.Person
 
-	//validate the jwt token
-	_, err := security.ValidateToken(w, r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
 	//get the user
 	foundPerson := data.DB.First(&person, params["id"])
 	if foundPerson.Error != nil {
@@ -66,5 +62,5 @@ func GetPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(person)
+	json.NewEncoder(w).Encode(person.Name)
 }

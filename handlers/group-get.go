@@ -48,14 +48,6 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 func GetGroup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
-	// validate the jwt token
-	_, err := security.ValidateToken(w, r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
 	params := mux.Vars(r)
 
 	var group data.Group

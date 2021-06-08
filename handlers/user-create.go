@@ -20,27 +20,7 @@ import (
 func CreatePerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
-	//for now everyone can create a user for testing purposes, otherwise only a logged in user can create another user
-	/*//validate the token
-	_, err := security.ValidateToken(w, r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
-		return
-	}*/
-
-	var group data.Group
 	person := r.Context().Value(security.KeyUser{}).(data.Person)
-
-	//check if the users group exists
-	if person.GroupName != "" {
-		foundGroup := data.DB.Where("name = ?", person.GroupName).First(&group)
-		if foundGroup.Error != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(foundGroup.Error.Error()))
-			return
-		}
-	}
 
 	//create the user
 	createdPerson := data.DB.Create(&person)
